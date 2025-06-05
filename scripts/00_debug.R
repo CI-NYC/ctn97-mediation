@@ -5,8 +5,13 @@ library(mlr3extralearners)
 library(xgboost)
 library(earth)
 library(checkmate)
+library(data.table)
 library(lcmmtp)
 
+# folder_path <- "lcmmtp/R"
+# r_files <- list.files(folder_path, pattern = "\\.R$", full.names = TRUE)
+# invisible(lapply(r_files, source))
+# 
 dat <- readRDS(here::here("data/analysis_data/analysis_data_alt_shift.rds")) |>
   as.data.frame()
 
@@ -77,30 +82,8 @@ L <- list(c("max_cows_1",
             "max_cows_missing_indicator_5") #benzo
 )
 
-# add regularization to xgboost and remove ranger
 learners <- list("mean",
-                 "glm", 
-                 "earth",
-                 list("xgboost",
-                      lambda = 5,
-                      id = "xgboost1"),
-                list("xgboost",
-                     alpha = 5,
-                     id = "xgboost2"),
-                 list("xgboost",
-                      lambda = 10,
-                      id = "xgboost3"),
-                list("xgboost",
-                     lambda = 30,
-                     id = "xgboost4"),
-                list("xgboost",
-                     lambda = 100,
-                     id = "xgboost5"),
-                list("xgboost",
-                     alpha = 5,
-                     lambda = 100,
-                     id = "xgboost6")
-)
+                 "glm")
 
 # function for running lmtp
 run_lcmmtp <-  function(data, day = 5, x = 1, y = 1) # x = 0 and y = 0, x = 1 and y = 0, ATE = 1,1 - 0,0, IIE = 1,1 - 1,0, IDE = 1,0 - 0,0
@@ -111,7 +94,7 @@ run_lcmmtp <-  function(data, day = 5, x = 1, y = 1) # x = 0 and y = 0, x = 1 an
     outcome_nodes <- c(1, 2, 3, 4, day)
   }
   
-  num_folds <- 10L
+  num_folds <- 2L
   
   result <- lcmmtp(
     data = data, 
@@ -126,11 +109,11 @@ run_lcmmtp <-  function(data, day = 5, x = 1, y = 1) # x = 0 and y = 0, x = 1 an
     d_prime = function(data, treatment) rep(x, length(data[[treatment]])), # intervention on A to see counterfactual outcome on Y
     d_star = function(data, treatment) rep(y, length(data[[treatment]])), # intervention on A to see counterfactual M
     control = .lcmmtp_control(folds = num_folds,
-                              folds_trt = NULL,
-                              folds_mediator = NULL,
-                              folds_QL = NULL,
-                              folds_QZ = NULL,
-                              folds_QM = NULL,
+                              #folds_trt = num_folds,
+                              #folds_mediator = num_folds,
+                              #folds_QL = num_folds,
+                              #folds_QZ = num_folds,
+                              #folds_QM = num_folds,
                               learners_trt = learners,
                               learners_mediator = learners,
                               learners_QL = learners,
@@ -149,25 +132,20 @@ dat |> select(PROTSEG, max_cows_1, adj_1, C_1, Y_1,
   summary()
 
 set.seed(9)
-for (x in c(0, 1))
-{
-for (y in c(0, 1))
-{
-  if (x == 0 && y == 1) {
-    next
-  }
-for (i in 14:14)
-{
-  
-  set.seed(9)
-  res <- run_lcmmtp(data = dat,
-                    day = i,
-                    x = x,
-                    y = y
-  )
-  
-  saveRDS(res, here::here(paste0("results/mediation_", x, "_", y, "_", i, ".rds")))
-}
-}
-}
-
+x <- 0
+y <- 0
+    if (x == 0 && y == 1) {
+      next
+    }
+    for (i in 14:14)
+    {
+      
+      set.seed(9)
+      res <- run_lcmmtp(data = dat,
+                        day = i,
+                        x = x,
+                        y = y
+      )
+      
+      saveRDS(res, here::here(paste0("results/mediation_", x, "_", y, "_", i, "_lambda_100.rds")))
+    }
