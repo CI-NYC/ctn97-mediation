@@ -8,7 +8,22 @@ library(checkmate)
 library(lcmmtp)
 
 dat <- readRDS(here::here("data/analysis_data/analysis_data_alt_shift.rds")) |>
-  as.data.frame()
+  as.data.frame() |>
+  mutate(adj_1 = case_when(adj_1 == 1 & max_cows_eligible_1 == 1 ~ 1,
+                           TRUE ~ 0),
+         adj_2 = case_when(is.na(adj_2) ~ NA,
+                           adj_2 == 1 & max_cows_eligible_2 == 1 ~ 1,
+                           TRUE ~ 0),
+         adj_3 = case_when(is.na(adj_3) ~ NA,
+                           adj_3 == 1 & max_cows_eligible_3 == 1 ~ 1,
+                           TRUE ~ 0),
+         adj_4 = case_when(is.na(adj_4) ~ NA,
+                           adj_4 == 1 & max_cows_eligible_4 == 1 ~ 1,
+                           TRUE ~ 0),
+         adj_5 = case_when(is.na(adj_5) ~ NA,
+                           adj_5 == 1 & max_cows_eligible_5 == 1 ~ 1,
+                           TRUE ~ 0)
+         )
 
 dat <- dat |>
   mutate(across(starts_with("C_"), ~ ifelse(. == 0, 1, ifelse(. == 1, 0, .)))) # alternating to match competing risks format
@@ -59,21 +74,15 @@ M <- c(c("adj_1"),
 
 A <- "PROTSEG"
 
-
 L <- list(c("max_cows_1", 
-            #"max_cows_eligible_1", # always 1
             "max_cows_missing_indicator_1"), #benzo
           c("max_cows_2", 
-            #"max_cows_eligible_2", # always 1
             "max_cows_missing_indicator_2"), #benzo
           c("max_cows_3", 
-            "max_cows_eligible_3", 
             "max_cows_missing_indicator_3"), #benzo
           c("max_cows_4", 
-            "max_cows_eligible_4", 
             "max_cows_missing_indicator_4"), #benzo
           c("max_cows_5", 
-            "max_cows_eligible_5", 
             "max_cows_missing_indicator_5") #benzo
 )
 
@@ -81,25 +90,21 @@ L <- list(c("max_cows_1",
 learners <- list("mean",
                  "glm", 
                  "earth",
-                 list("xgboost",
-                      lambda = 5,
-                      id = "xgboost1"),
                 list("xgboost",
-                     alpha = 5,
+                     lambda = 100,
                      id = "xgboost2"),
-                 list("xgboost",
-                      lambda = 10,
-                      id = "xgboost3"),
                 list("xgboost",
-                     lambda = 30,
+                     alpha = 10,
+                     lambda = 150,
+                     id = "xgboost3"),
+                list("xgboost",
+                     alpha = 10,
+                     lambda = 200,
                      id = "xgboost4"),
                 list("xgboost",
-                     lambda = 100,
-                     id = "xgboost5"),
-                list("xgboost",
-                     alpha = 5,
-                     lambda = 100,
-                     id = "xgboost6")
+                     alpha = 25,
+                     lambda = 500,
+                     id = "xgboost5")
 )
 
 # function for running lmtp
@@ -149,14 +154,14 @@ dat |> select(PROTSEG, max_cows_1, adj_1, C_1, Y_1,
   summary()
 
 set.seed(9)
-for (x in c(0, 1))
+for (x in c(1))
 {
-for (y in c(0, 1))
+for (y in c(0))
 {
   if (x == 0 && y == 1) {
     next
   }
-for (i in 14:14)
+for (i in 14:14) 
 {
   
   set.seed(9)
@@ -166,7 +171,7 @@ for (i in 14:14)
                     y = y
   )
   
-  saveRDS(res, here::here(paste0("results/mediation_", x, "_", y, "_", i, ".rds")))
+  saveRDS(res, here::here(paste0("results_061725/mediation_", x, "_", y, "_", i, "TEST_truncate_99.rds")))
 }
 }
 }

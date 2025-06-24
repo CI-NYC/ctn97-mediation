@@ -1,0 +1,289 @@
+---
+title: "README for CTN97 Mediation (with Competing Risks)"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(warning = FALSE)
+knitr::opts_chunk$set(message = FALSE)
+library(tidyverse)
+library(mlr3superlearner)
+library(mlr3extralearners)
+library(xgboost)
+library(earth)
+library(checkmate)
+library(lcmmtp)
+```
+### Summary
+
+- Using CTN97 data, conduct a longitudinal mediation analysis with competing risks
+- Variables of interest:
+  - Exposure: randomization arm at baseline (rapid v. standard)
+  - Mediator-outcome confounders: maximum COWS score on day t, missing indicator for maximum COWS score on day t $\in$ (1, 2, 3, 4, 5)
+    - Previously, we also included an eligibility indicator (1 if eligible to receive additional medication) but we are now including this in the mediator
+  - Mediators: adjunctive medication (clonidine, clonazepam, or benzodiazepines) on day t AND eligible for additional medication following max COWS on day t $\in$ (1, 2, 3, 4, 5)
+  - Competing event: dropout or initiation of another MOUD on day t $\in$ (5, ..., 14)
+  - Outcome: initiation of XR-NTX on day t $\in$ (5, ..., 14)
+
+
+
+### Number of people receiving clonidine (≥1 mg), clonazepam (≥0.1 mg), or benzo (>0 mg) and eligible for additional medication (did not receive more than maximum allowable dose in past 24 hours), by protocol
+
+#### Table Form
+
+- M = 1 indicates that the individual received at least one of clonidine (≥1 mg), clonazepam (≥0.1 mg), or benzo (>0 mg) AND was eligible for additional medication (did not receive more than maximum allowable dose in past 24 hours)
+- M = 0 indicates that the individual did NOT receive at least one of clonidine (≥1 mg), clonazepam (≥0.1 mg), or benzo (>0 mg) OR was ineligible for additional medication (received more than maximum allowable dose in past 24 hours)
+
+```{r}
+dat <- readRDS(here::here("data/analysis_data/analysis_data_alt_shift.rds")) |>
+  as.data.frame()
+
+t1 <- dat |>
+  group_by(PROTSEG) |>
+  summarize(count = n(),
+            M1 = sum(ifelse(adj_1 == 1 & max_cows_eligible_1 == 1, 1, 0)),
+            percent = round(M1/n(), 3) * 100)
+
+t2 <- dat |>
+  filter(Y_1 == 0,
+         C_1 == 1) |>
+  group_by(PROTSEG) |>
+  summarize(count = n(),
+            M2 = sum(ifelse(adj_2 == 1 & max_cows_eligible_2 == 1, 1, 0)),
+            percent = round(M2/n(), 3) * 100)
+
+t3 <- dat |>
+  filter(Y_2 == 0,
+         C_2 == 1) |>
+  group_by(PROTSEG) |>
+  summarize(count = n(),
+            M3 = sum(ifelse(adj_3 == 1 & max_cows_eligible_3 == 1, 1, 0)),
+            percent = round(M3/n(), 3) * 100)
+
+t4 <- dat |>
+  filter(Y_3 == 0,
+         C_3 == 1) |>
+  group_by(PROTSEG) |>
+  summarize(count = n(),
+            M4 = sum(ifelse(adj_4 == 1 & max_cows_eligible_4 == 1, 1, 0)),
+            percent = round(M4/n(), 3) * 100)
+
+t5 <- dat |>
+  filter(Y_4 == 0,
+         C_4 == 1) |>
+  group_by(PROTSEG) |>
+  summarize(count = n(),
+            M5 = sum(ifelse(adj_5 == 1 & max_cows_eligible_5 == 1, 1, 0)),
+            percent = round(M5/n(), 3) * 100)
+```
+
+<table border="1">
+  <tr>
+    <th></th>
+    <th colspan="2">t = 1</th>
+    <th colspan="2">t = 2</th>
+    <th colspan="2">t = 3</th>
+    <th colspan="2">t = 4</th>
+    <th colspan="2">t = 5</th>
+  </tr>
+  <tr>
+    <td>A = 1 (Rapid)</td>
+    <td>M = 1, 213 (94.7%)</td>
+    <td>M = 0, 12 (5.3%)</td>
+    <td>M = 1, 220 (99.1%)</td>
+    <td>M = 0, <br>2 (0.9%) </td>
+    <td>M = 1, 206 (96.1%)</td>
+    <td>M = 0, <br>8 (3.9%)</td>
+    <td>M = 1, <br>173 <br>(93.0%)</td>
+    <td>M = 0, <br>13 <br>(7.0%)</td>
+    <td>M = 1, <br>130 <br>(92.9%)</td>
+    <td>M = 0, <br>10 <br>(7.1%)</td>
+  </tr>
+  <tr>
+    <td>A = 0 (Standard)</td>
+    <td>M = 1, 119 (62.6%)</td>
+    <td>M = 0, 71 (37.4%)</td>
+    <td>M = 1, 117 (65.0%)</td>
+    <td>M = 0, 63 (35.0%)</td>
+    <td>M = 1, 105 (62.1%)</td>
+    <td>M = 0, 64 (37.9%) </td>
+    <td>M = 1, <br>77 <br>(53.8%)</td>
+    <td>M = 0, <br>66 <br>(46.2%)</td>
+    <td>M = 1, <br>69 <br>(54.3%)</td>
+    <td>M = 0, <br>58 <br>(45.7%)</td>
+  </tr>
+</table>
+
+
+#### Plot Form
+
+- Top row of panels shows dosing information for the first 5 days among those who initiated XR-NTX by day 14, stratified by protocol
+- Bottom row of panels shows dosing information for the first 5 days among those who did NOT initiate XR-NTX by day 14, stratified by protocol
+
+![Sequence Plot](figures/sequence_plot.png)
+
+Who is getting benzos? 
+
+- Primarily those in the standard protocol and those who do not experience outcome
+
+#### Table Form (Daily Max COWS)
+
+- M = 1 indicates that the individual received at least one of clonidine (≥1 mg), clonazepam (≥0.1 mg), or benzo (>0 mg) AND was eligible for additional medication (did not receive more than maximum allowable dose in past 24 hours) AND max cows ≥ 3 (and not missing)
+- M = 0 indicates that the individual did NOT receive at least one of clonidine (≥1 mg), clonazepam (≥0.1 mg), or benzo (>0 mg) OR was ineligible for additional medication (received more than maximum allowable dose in past 24 hours) OR max cows < 3 (or missing)
+
+```{r}
+t1 <- dat |>
+  group_by(PROTSEG) |>
+  summarize(count = n(),
+            M1 = sum(ifelse(adj_1 == 1 & max_cows_eligible_1 == 1 & max_cows_1 >= 3 & max_cows_missing_indicator_1 == 0, 1, 0)),
+            percent = round(M1/n(), 3) * 100)
+
+t2 <- dat |>
+  filter(Y_1 == 0,
+         C_1 == 1) |>
+  group_by(PROTSEG) |>
+  summarize(count = n(),
+            M2 = sum(ifelse(adj_2 == 1 & max_cows_eligible_2 == 1 & max_cows_2 >= 3 & max_cows_missing_indicator_2 == 0, 1, 0)),
+            percent = round(M2/n(), 3) * 100)
+
+t3 <- dat |>
+  filter(Y_2 == 0,
+         C_2 == 1) |>
+  group_by(PROTSEG) |>
+  summarize(count = n(),
+            M3 = sum(ifelse(adj_3 == 1 & max_cows_eligible_3 == 1 & max_cows_3 >= 3 & max_cows_missing_indicator_3 == 0, 1, 0)),
+            percent = round(M3/n(), 3) * 100)
+
+t4 <- dat |>
+  filter(Y_3 == 0,
+         C_3 == 1) |>
+  group_by(PROTSEG) |>
+  summarize(count = n(),
+            M4 = sum(ifelse(adj_4 == 1 & max_cows_eligible_4 == 1 & max_cows_4 >= 3 & max_cows_missing_indicator_4 == 0, 1, 0)),
+            percent = round(M4/n(), 3) * 100)
+
+t5 <- dat |>
+  filter(Y_4 == 0,
+         C_4 == 1) |>
+  group_by(PROTSEG) |>
+  summarize(count = n(),
+            M5 = sum(ifelse(adj_5 == 1 & max_cows_eligible_5 == 1 & max_cows_5 >= 3 & max_cows_missing_indicator_5 == 0, 1, 0)),
+            percent = round(M5/n(), 3) * 100)
+```
+
+<table border="1">
+  <tr>
+    <th></th>
+    <th colspan="2">t = 1</th>
+    <th colspan="2">t = 2</th>
+    <th colspan="2">t = 3</th>
+    <th colspan="2">t = 4</th>
+    <th colspan="2">t = 5</th>
+  </tr>
+  <tr>
+    <td>A = 1 (Rapid)</td>
+    <td>M = 1, 179 (79.6%)</td>
+    <td>M = 0, 46 (20.4%)</td>
+    <td>M = 1, 185 (83.3%)</td>
+    <td>M = 0, <br>37 (16.7%) </td>
+    <td>M = 1, 176 (85.4%)</td>
+    <td>M = 0, <br>30 (14.6%)</td>
+    <td>M = 1, <br>136 <br>(73.1%)</td>
+    <td>M = 0, <br>50 <br>(26.9%)</td>
+    <td>M = 1, <br>96 <br>(68.6%)</td>
+    <td>M = 0, <br>44 <br>(31.4%)</td>
+  </tr>
+  <tr>
+    <td>A = 0 (Standard)</td>
+    <td>M = 1, 82 (43.2%)</td>
+    <td>M = 0, 108 (56.8%)</td>
+    <td>M = 1, 85 (47.2%)</td>
+    <td>M = 0, 98 (52.8%)</td>
+    <td>M = 1, 71 (42.0%)</td>
+    <td>M = 0, 98 (58.0%) </td>
+    <td>M = 1, <br>50 <br>(35.0%)</td>
+    <td>M = 0, <br>93 <br>(65.0%)</td>
+    <td>M = 1, <br>40 <br>(31.5%)</td>
+    <td>M = 0, <br>87 <br>(68.5%)</td>
+  </tr>
+</table>
+
+### Dosing (Continuous Dose) 
+
+#### Scaled between 0 and 1 for comparability 
+```{r}
+scale <- function(x) {
+  (x - min(x, na.rm = TRUE)) / (max(x, na.rm = TRUE) - min(x, na.rm = TRUE))
+}
+
+dosing_dat_scaled <- dat |>
+  select(starts_with("dose") & 
+           (ends_with("_1") | ends_with("_2") |
+              ends_with("_3") | ends_with("_4") |
+              ends_with("_5"))) |>
+  mutate(across(everything(), ~ scale(.))) |>
+  mutate(
+    sum_1 = rowSums(across(ends_with("_1")), na.rm = TRUE),
+    sum_2 = rowSums(across(ends_with("_2")), na.rm = TRUE),
+    sum_3 = rowSums(across(ends_with("_3")), na.rm = TRUE),
+    sum_4 = rowSums(across(ends_with("_4")), na.rm = TRUE),
+    sum_5 = rowSums(across(ends_with("_5")), na.rm = TRUE)
+  )
+
+dosing_dat_scaled_long <- dosing_dat_scaled |>
+  pivot_longer(
+    cols = everything(),
+    names_to = "variable",
+    values_to = "value"
+  ) |>
+  mutate(
+    adj = sub("_[0-9]+$", "", variable),
+    day = sub("^.*_([0-9]+)$", "\\1", variable)
+  )
+
+ggplot(dosing_dat_scaled_long |> filter(!grepl("sum", adj)), aes(x = value)) +
+  geom_histogram(bins = 30, fill = "cornflowerblue", color = "white") +
+  facet_grid(adj ~ day) +
+  theme_minimal() +
+  labs(title = "Histograms of scaled daily dose totals by day (1-5)",
+       x = "",
+       y = "Count")
+
+# plotly::plot_ly(dosing_dat, x = ~dose_total_clonidine_1, y = ~dose_total_clonazepam_1, z = ~dose_total_benzo_1,
+#          type = 'scatter3d', mode = 'markers') 
+
+# set.seed(5)  
+# kmeans_result <- kmeans(dosing_dat |> select(ends_with("_1")), centers = 3)
+# 
+# kmeans_result$cluster
+# kmeans_result$centers
+# 
+# dosing_dat$cluster <- as.factor(kmeans_result$cluster)
+# 
+# plotly::plot_ly(dosing_dat, x = ~dose_total_clonidine_1, y = ~dose_total_clonazepam_1, z = ~dose_total_benzo_1, color = ~cluster, colors = c('red', 'blue'),
+#         type = 'scatter3d', mode = 'markers') 
+```
+
+### How to group dosing for discrete few-valued mediator?
+
+```{r}
+ggplot(dosing_dat_scaled_long |> filter(grepl("sum", adj)), aes(x = value)) +
+  geom_histogram(bins = 30, fill = "cornflowerblue", color = "white") +
+  facet_grid(adj ~ day, scales = "free_x") +
+  theme_minimal() +
+  labs(title = "Histograms of scaled summed daily dose totals by day (1-5)",
+       x = "",
+       y = "Count")
+```
+
+- Look at grouping into 4 groups? Need to determine how to set cutoffs (or potentially do by percentile)
+  - Group 1: no adjunctive/ineligible for additional dosing
+  - Group 2: low dose
+  - Group 3: moderate dose
+  - Group 4: high dose
+
+### Next steps:
+
+- Look at incorporating max COWS into mediator definition
+- Look at using discrete few-values mediators
