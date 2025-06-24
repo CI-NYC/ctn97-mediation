@@ -16,8 +16,8 @@ README for CTN97 Mediation (with Competing Risks)
     benzodiazepines) on day t AND eligible for additional medication
     following max COWS on day t $\in$ (1, 2, 3, 4, 5)
   - Competing event: dropout or initiation of another MOUD on day t
-    $\in$ (5, …, 14)
-  - Outcome: initiation of XR-NTX on day t $\in$ (5, …, 14)
+    $\in$ (1, …, 14)
+  - Outcome: initiation of XR-NTX on day t $\in$ (1, …, 14)
 
 ### Number of people receiving clonidine (≥1 mg), clonazepam (≥0.1 mg), or benzo (\>0 mg) and eligible for additional medication (did not receive more than maximum allowable dose in past 24 hours), by protocol
 
