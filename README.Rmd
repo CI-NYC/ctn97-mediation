@@ -250,7 +250,7 @@ dosing_3 <- ggplot(dosing_dat_scaled_long |> filter(!grepl("sum", adj)), aes(x =
        x = "",
        y = "Count")
 
-ggsave(filename = "figures/dosing_3.png", plot = dosing_3, height = 12, width = 9, units = "in")
+ggsave(filename = "figures/dosing_3.png", bg = "white", plot = dosing_3, height = 12, width = 9, units = "in")
 
 # plotly::plot_ly(dosing_dat, x = ~dose_total_clonidine_1, y = ~dose_total_clonazepam_1, z = ~dose_total_benzo_1,
 #          type = 'scatter3d', mode = 'markers') 
@@ -280,7 +280,7 @@ dosing_sum <- ggplot(dosing_dat_scaled_long |> filter(grepl("sum", adj)), aes(x 
        x = "",
        y = "Count")
 
-ggsave(filename = "figures/dosing_sum.png", plot = dosing_sum, height = 12, width = 9, units = "in")
+ggsave(filename = "figures/dosing_sum.png", bg = "white", plot = dosing_sum, height = 12, width = 9, units = "in")
 ```
 
 ![](figures/dosing_sum.png)
