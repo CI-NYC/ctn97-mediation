@@ -249,11 +249,11 @@ M = 0, <br>87 <br>(68.5%)
 
 #### Scaled between 0 and 1 for comparability
 
-![](README_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
+![](figures/dosing_3.png)
 
 ### How to group dosing for discrete few-valued mediator?
 
-![](README_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
+![](figures/dosing_sum.png)
 
 - Look at grouping into 4 groups? Need to determine how to set cutoffs
   (or potentially do by percentile)

@@ -242,13 +242,15 @@ dosing_dat_scaled_long <- dosing_dat_scaled |>
     day = sub("^.*_([0-9]+)$", "\\1", variable)
   )
 
-ggplot(dosing_dat_scaled_long |> filter(!grepl("sum", adj)), aes(x = value)) +
+dosing_3 <- ggplot(dosing_dat_scaled_long |> filter(!grepl("sum", adj)), aes(x = value)) +
   geom_histogram(bins = 30, fill = "cornflowerblue", color = "white") +
   facet_grid(adj ~ day) +
   theme_minimal() +
   labs(title = "Histograms of scaled daily dose totals by day (1-5)",
        x = "",
        y = "Count")
+
+ggsave(filename = "figures/dosing_3.png", plot = dosing_3, height = 12, width = 9, units = "in")
 
 # plotly::plot_ly(dosing_dat, x = ~dose_total_clonidine_1, y = ~dose_total_clonazepam_1, z = ~dose_total_benzo_1,
 #          type = 'scatter3d', mode = 'markers') 
@@ -265,17 +267,23 @@ ggplot(dosing_dat_scaled_long |> filter(!grepl("sum", adj)), aes(x = value)) +
 #         type = 'scatter3d', mode = 'markers') 
 ```
 
+![](figures/dosing_3.png)
+
 ### How to group dosing for discrete few-valued mediator?
 
 ```{r}
-ggplot(dosing_dat_scaled_long |> filter(grepl("sum", adj)), aes(x = value)) +
+dosing_sum <- ggplot(dosing_dat_scaled_long |> filter(grepl("sum", adj)), aes(x = value)) +
   geom_histogram(bins = 30, fill = "cornflowerblue", color = "white") +
   facet_grid(adj ~ day, scales = "free_x") +
   theme_minimal() +
   labs(title = "Histograms of scaled summed daily dose totals by day (1-5)",
        x = "",
        y = "Count")
+
+ggsave(filename = "figures/dosing_sum.png", plot = dosing_sum, height = 12, width = 9, units = "in")
 ```
+
+![](figures/dosing_sum.png)
 
 - Look at grouping into 4 groups? Need to determine how to set cutoffs (or potentially do by percentile)
   - Group 1: no adjunctive/ineligible for additional dosing
