@@ -1,7 +1,7 @@
 README for CTN97 Mediation (with Competing Risks)
 ================
 
-### Summary
+## Summary
 
 - Using CTN97 data, conduct a longitudinal mediation analysis with
   competing risks
@@ -19,7 +19,98 @@ README for CTN97 Mediation (with Competing Risks)
     $\in$ (5, …, 14)
   - Outcome: initiation of XR-NTX on day t $\in$ (5, …, 14)
 
-### Number of people receiving clonidine (≥1 mg), clonazepam (≥0.1 mg), or benzo (\>0 mg) and eligible for additional medication (did not receive more than maximum allowable dose in past 24 hours), by protocol
+## Discrete Mediators
+
+- Combine clonazepam and “other” benzodiazepines into a single scale,
+  using common conversion scale [(VA
+  scale)](https://www.healthquality.va.gov/guidelines/MH/sud/VA-DoD-SUD-CPG_Final_for-508_v3.pdf)
+
+- M = 3 indicates that the individual received at least one of clonidine
+  (≥0.1 mg) AND received benzo (≥3 mg) AND was eligible for additional
+  medication (did not receive more than maximum allowable dose in past
+  24 hours)
+
+- M = 2 indicates that the individual received at least one of clonidine
+  (≥0.1 mg) OR received benzo (≥2 mg) AND was eligible for additional
+  medication (did not receive more than maximum allowable dose in past
+  24 hours)
+
+- M = 1 indicates that the individual received at least one of clonidine
+  (≥0.1 mg) OR received ANY benzo (\>0 mg) AND was eligible for
+  additional medication (did not receive more than maximum allowable
+  dose in past 24 hours)
+
+- M = 0 indicates that the individual did NOT receive at least one of
+  clonidine (≥0.1 mg) or benzo (\>0 mg) OR was ineligible for additional
+  medication (received more than maximum allowable dose in past 24
+  hours)
+
+| Arm      | Group_day_1 | count |
+|:---------|------------:|------:|
+| Rapid    |           0 |    12 |
+| Rapid    |           1 |     9 |
+| Rapid    |           2 |   153 |
+| Rapid    |           3 |    51 |
+| Standard |           0 |    71 |
+| Standard |           1 |    33 |
+| Standard |           2 |    73 |
+| Standard |           3 |    13 |
+
+| Arm      | Group_day_2 | count |
+|:---------|------------:|------:|
+| Rapid    |           0 |     2 |
+| Rapid    |           1 |     1 |
+| Rapid    |           2 |    83 |
+| Rapid    |           3 |   136 |
+| Rapid    |          NA |     3 |
+| Standard |           0 |    63 |
+| Standard |           1 |    27 |
+| Standard |           2 |    77 |
+| Standard |           3 |    13 |
+| Standard |          NA |    10 |
+
+| Arm      | Group_day_3 | count |
+|:---------|------------:|------:|
+| Rapid    |           0 |     8 |
+| Rapid    |           1 |     4 |
+| Rapid    |           2 |    60 |
+| Rapid    |           3 |   134 |
+| Rapid    |          NA |    19 |
+| Standard |           0 |    64 |
+| Standard |           1 |    30 |
+| Standard |           2 |    68 |
+| Standard |           3 |     7 |
+| Standard |          NA |    21 |
+
+| Arm      | Group_day_4 | count |
+|:---------|------------:|------:|
+| Rapid    |           0 |    13 |
+| Rapid    |           1 |     3 |
+| Rapid    |           2 |    54 |
+| Rapid    |           3 |   116 |
+| Rapid    |          NA |    39 |
+| Standard |           0 |    66 |
+| Standard |           1 |    23 |
+| Standard |           2 |    49 |
+| Standard |           3 |     5 |
+| Standard |          NA |    47 |
+
+| Arm      | Group_day_5 | count |
+|:---------|------------:|------:|
+| Rapid    |           0 |    10 |
+| Rapid    |           1 |     5 |
+| Rapid    |           2 |    52 |
+| Rapid    |           3 |    73 |
+| Rapid    |          NA |    85 |
+| Standard |           0 |    58 |
+| Standard |           1 |    15 |
+| Standard |           2 |    51 |
+| Standard |           3 |     3 |
+| Standard |          NA |    63 |
+
+## Binary Mediators (old)
+
+### Number of people receiving clonidine (≥0.1 mg), clonazepam (≥1 mg), or other benzo (\>0 mg) and eligible for additional medication (did not receive more than maximum allowable dose in past 24 hours), by protocol
 
 #### Table Form
 
@@ -137,99 +228,10 @@ M = 0, <br>58 <br>(45.7%)
 <figcaption aria-hidden="true">Sequence Plot</figcaption>
 </figure>
 
-Who is getting benzos?
+Who is getting other benzos?
 
 - Primarily those in the standard protocol and those who do not
   experience outcome
-
-### What if we discretize our mediator?
-
-- combine clonazepam and “other” benzodiazepines into a single scale,
-  using common conversion scale [(VA
-  scale)](https://www.healthquality.va.gov/guidelines/MH/sud/VA-DoD-SUD-CPG_Final_for-508_v3.pdf)
-
-- M = 3 indicates that the individual received at least one of clonidine
-  (≥0.1 mg) AND received benzo (≥3 mg) AND was eligible for additional
-  medication (did not receive more than maximum allowable dose in past
-  24 hours)
-
-- M = 2 indicates that the individual received at least one of clonidine
-  (≥0.1 mg) OR received benzo (≥2 mg) AND was eligible for additional
-  medication (did not receive more than maximum allowable dose in past
-  24 hours)
-
-- M = 1 indicates that the individual received at least one of clonidine
-  (≥0.1 mg) OR received ANY benzo (\>0 mg) AND was eligible for
-  additional medication (did not receive more than maximum allowable
-  dose in past 24 hours)
-
-- M = 0 indicates that the individual did NOT receive at least one of
-  clonidine (≥0.1 mg) or benzo (\>0 mg) OR was ineligible for additional
-  medication (received more than maximum allowable dose in past 24
-  hours)
-
-| Arm      | Group_day_1 | count |
-|:---------|------------:|------:|
-| Rapid    |           0 |    12 |
-| Rapid    |           1 |     9 |
-| Rapid    |           2 |   153 |
-| Rapid    |           3 |    51 |
-| Standard |           0 |    71 |
-| Standard |           1 |    33 |
-| Standard |           2 |    73 |
-| Standard |           3 |    13 |
-
-| Arm      | Group_day_2 | count |
-|:---------|------------:|------:|
-| Rapid    |           0 |     2 |
-| Rapid    |           1 |     1 |
-| Rapid    |           2 |    83 |
-| Rapid    |           3 |   136 |
-| Rapid    |          NA |     3 |
-| Standard |           0 |    63 |
-| Standard |           1 |    27 |
-| Standard |           2 |    77 |
-| Standard |           3 |    13 |
-| Standard |          NA |    10 |
-
-| Arm      | Group_day_3 | count |
-|:---------|------------:|------:|
-| Rapid    |           0 |     8 |
-| Rapid    |           1 |     4 |
-| Rapid    |           2 |    60 |
-| Rapid    |           3 |   134 |
-| Rapid    |          NA |    19 |
-| Standard |           0 |    64 |
-| Standard |           1 |    30 |
-| Standard |           2 |    68 |
-| Standard |           3 |     7 |
-| Standard |          NA |    21 |
-
-| Arm      | Group_day_4 | count |
-|:---------|------------:|------:|
-| Rapid    |           0 |    13 |
-| Rapid    |           1 |     3 |
-| Rapid    |           2 |    54 |
-| Rapid    |           3 |   116 |
-| Rapid    |          NA |    39 |
-| Standard |           0 |    66 |
-| Standard |           1 |    23 |
-| Standard |           2 |    49 |
-| Standard |           3 |     5 |
-| Standard |          NA |    47 |
-
-| Arm      | Group_day_5 | count |
-|:---------|------------:|------:|
-| Rapid    |           0 |    10 |
-| Rapid    |           1 |     5 |
-| Rapid    |           2 |    52 |
-| Rapid    |           3 |    73 |
-| Rapid    |          NA |    85 |
-| Standard |           0 |    58 |
-| Standard |           1 |    15 |
-| Standard |           2 |    51 |
-| Standard |           3 |     3 |
-| Standard |          NA |    63 |
 
 #### Table Form (Daily Max COWS)
 

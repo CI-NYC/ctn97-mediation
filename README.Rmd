@@ -15,28 +15,7 @@ library(earth)
 library(checkmate)
 library(lcmmtp)
 library(knitr)
-```
-### Summary
 
-- Using CTN97 data, conduct a longitudinal mediation analysis with competing risks
-- Variables of interest:
-  - Exposure: randomization arm at baseline (rapid v. standard)
-  - Mediator-outcome confounders: maximum COWS score on day t, missing indicator for maximum COWS score on day t $\in$ (1, 2, 3, 4, 5)
-    - Previously, we also included an eligibility indicator (1 if eligible to receive additional medication) but we are now including this in the mediator
-  - Mediators: adjunctive medication (clonidine, clonazepam, or benzodiazepines) on day t AND eligible for additional medication following max COWS on day t $\in$ (1, 2, 3, 4, 5)
-  - Competing event: dropout or initiation of another MOUD on day t $\in$ (5, ..., 14)
-  - Outcome: initiation of XR-NTX on day t $\in$ (5, ..., 14)
-
-
-
-### Number of people receiving clonidine (≥1 mg), clonazepam (≥0.1 mg), or benzo (>0 mg) and eligible for additional medication (did not receive more than maximum allowable dose in past 24 hours), by protocol
-
-#### Table Form
-
-- M = 1 indicates that the individual received at least one of clonidine (≥1 mg), clonazepam (≥0.1 mg), or benzo (>0 mg) AND was eligible for additional medication (did not receive more than maximum allowable dose in past 24 hours)
-- M = 0 indicates that the individual did NOT receive at least one of clonidine (≥1 mg), clonazepam (≥0.1 mg), or benzo (>0 mg) OR was ineligible for additional medication (received more than maximum allowable dose in past 24 hours)
-
-```{r}
 dat <- readRDS(here::here("data/analysis_data/analysis_data_alt_shift.rds")) |>
   mutate(dose_total_clonazepam_and_benzo_1 = dose_total_clonazepam_1 + dose_total_benzo_1,
          dose_total_clonazepam_and_benzo_2 = dose_total_clonazepam_2 + dose_total_benzo_2,
@@ -71,7 +50,75 @@ dat <- readRDS(here::here("data/analysis_data/analysis_data_alt_shift.rds")) |>
                         (dose_total_clonidine_5>= 0.1 | dose_total_clonazepam_and_benzo_5 > 0) & max_cows_eligible_5 == 1 ~ 1,
                         TRUE ~ 0)  
   )
+```
 
+## Summary
+
+- Using CTN97 data, conduct a longitudinal mediation analysis with competing risks
+- Variables of interest:
+  - Exposure: randomization arm at baseline (rapid v. standard)
+  - Mediator-outcome confounders: maximum COWS score on day t, missing indicator for maximum COWS score on day t $\in$ (1, 2, 3, 4, 5)
+    - Previously, we also included an eligibility indicator (1 if eligible to receive additional medication) but we are now including this in the mediator
+  - Mediators: adjunctive medication (clonidine, clonazepam, or benzodiazepines) on day t AND eligible for additional medication following max COWS on day t $\in$ (1, 2, 3, 4, 5)
+  - Competing event: dropout or initiation of another MOUD on day t $\in$ (5, ..., 14)
+  - Outcome: initiation of XR-NTX on day t $\in$ (5, ..., 14)
+
+## Discrete Mediators
+
+- Combine clonazepam and "other" benzodiazepines into a single scale, using common conversion scale [(VA scale)](https://www.healthquality.va.gov/guidelines/MH/sud/VA-DoD-SUD-CPG_Final_for-508_v3.pdf)
+
+- M = 3 indicates that the individual received at least one of clonidine (≥0.1 mg) AND received benzo (≥3 mg) AND was eligible for additional medication (did not receive more than maximum allowable dose in past 24 hours)
+- M = 2 indicates that the individual received at least one of clonidine (≥0.1 mg) OR received benzo (≥2 mg) AND was eligible for additional medication (did not receive more than maximum allowable dose in past 24 hours)
+- M = 1 indicates that the individual received at least one of clonidine (≥0.1 mg) OR received ANY benzo (>0 mg) AND was eligible for additional medication (did not receive more than maximum allowable dose in past 24 hours)
+- M = 0 indicates that the individual did NOT receive at least one of clonidine (≥0.1 mg) or benzo (>0 mg) OR was ineligible for additional medication (received more than maximum allowable dose in past 24 hours)
+
+```{r}
+day_1 <- dat |>
+  group_by(Arm, Group_day_1) |>
+  summarize(count = n()) 
+
+day_2 <- dat |>
+  group_by(Arm, Group_day_2) |>
+  summarize(count = n()) |>
+  filter(is.na(count) == FALSE)
+
+dat |>
+  group_by(Arm, Group_day_1) |>
+  summarize(count = n()) |>
+  kable()
+
+dat |>
+  group_by(Arm, Group_day_2) |>
+  summarize(count = n()) |>
+  kable()
+
+dat |>
+  group_by(Arm, Group_day_3) |>
+  summarize(count = n()) |>
+  kable()
+
+
+dat |>
+  group_by(Arm, Group_day_4) |>
+  summarize(count = n()) |>
+  kable()
+
+dat |>
+  group_by(Arm, Group_day_5) |>
+  summarize(count = n()) |>
+  kable()
+```
+
+## Binary Mediators (old)
+
+### Number of people receiving clonidine (≥0.1 mg), clonazepam (≥1 mg), or other benzo (>0 mg) and eligible for additional medication (did not receive more than maximum allowable dose in past 24 hours), by protocol
+
+#### Table Form
+
+- M = 1 indicates that the individual received at least one of clonidine (≥1 mg), clonazepam (≥0.1 mg), or benzo (>0 mg) AND was eligible for additional medication (did not receive more than maximum allowable dose in past 24 hours)
+- M = 0 indicates that the individual did NOT receive at least one of clonidine (≥1 mg), clonazepam (≥0.1 mg), or benzo (>0 mg) OR was ineligible for additional medication (received more than maximum allowable dose in past 24 hours)
+
+```{r}
 t1 <- dat |>
   group_by(PROTSEG) |>
   summarize(count = n(),
@@ -156,48 +203,9 @@ t5 <- dat |>
 
 ![Sequence Plot](figures/sequence_plot.png)
 
-Who is getting benzos? 
+Who is getting other benzos? 
 
 - Primarily those in the standard protocol and those who do not experience outcome
-
-### What if we discretize our mediator?
-
-- combine clonazepam and "other" benzodiazepines into a single scale, using common conversion scale [(VA scale)](https://www.healthquality.va.gov/guidelines/MH/sud/VA-DoD-SUD-CPG_Final_for-508_v3.pdf)
-
-- M = 3 indicates that the individual received at least one of clonidine (≥0.1 mg) AND received benzo (≥3 mg) AND was eligible for additional medication (did not receive more than maximum allowable dose in past 24 hours)
-- M = 2 indicates that the individual received at least one of clonidine (≥0.1 mg) OR received benzo (≥2 mg) AND was eligible for additional medication (did not receive more than maximum allowable dose in past 24 hours)
-- M = 1 indicates that the individual received at least one of clonidine (≥0.1 mg) OR received ANY benzo (>0 mg) AND was eligible for additional medication (did not receive more than maximum allowable dose in past 24 hours)
-- M = 0 indicates that the individual did NOT receive at least one of clonidine (≥0.1 mg) or benzo (>0 mg) OR was ineligible for additional medication (received more than maximum allowable dose in past 24 hours)
-
-```{r}
-dat |>
-  group_by(Arm, Group_day_1) |>
-  summarize(count = n()) |>
-  kable()
-
-dat |>
-  group_by(Arm, Group_day_2) |>
-  summarize(count = n()) |>
-  kable()
-
-dat |>
-  group_by(Arm, Group_day_3) |>
-  summarize(count = n()) |>
-  kable()
-
-
-dat |>
-  group_by(Arm, Group_day_4) |>
-  summarize(count = n()) |>
-  kable()
-
-dat |>
-  group_by(Arm, Group_day_5) |>
-  summarize(count = n()) |>
-  kable()
-```
-
-
 
 #### Table Form (Daily Max COWS)
 
