@@ -1,16 +1,16 @@
 #!/bin/bash
 #SBATCH --account=msph
-#SBATCH --job-name=m00
+#SBATCH --job-name=m11
 #SBATCH --mem-per-cpu=5G
 #SBATCH --time=4-00:00
-#SBATCH --array=12-13
-#SBATCH -N 1                     # The number of nodes to request
+#SBATCH --array=5-14
+#SBATCH -N 1                     
 #SBATCH -c 4
 #SBATCH --mail-type=ALL
-#SBATCH --mail-user=si2426@cumc.columbia.edu
-#SBATCH -t 4-00:00
-x=0
-y=0
+#SBATCH --mail-user=X@cumc.columbia.edu
+
+x=1 # aprime
+y=1 # astar
 
 Rscript main.R $x $y 
 
