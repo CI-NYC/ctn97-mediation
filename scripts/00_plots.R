@@ -1,6 +1,7 @@
 library(tidyverse)
 library(ggplot2)
 library(patchwork)
+library(ggpubr)
 
 df_no_benzo <- readRDS(here::here("data/analysis_data/analysis_data_alt_shift_no_benzo.rds")) |>
   select(PATID,
