@@ -94,7 +94,11 @@ W <- c("days_from_admission_to_consent",
        "bipolar", #missing,
        #"bipolar_missing",
        "depression", #missing
+<<<<<<< HEAD
        #"depression_missing",
+=======
+       #"depression_missing"
+>>>>>>> a29608b4e1f9c63a8a5d88298c6078d5cbfd5aa4
        "D97NPOPI",
        "D97NPOPI_missing"
 )
@@ -121,7 +125,7 @@ L <- list(c("max_cows_1",
 )
 
 learners <- list("mean",
-                 "glm", 
+                 "glm",
                  "earth",
                  list("xgboost",
                       gamma = 5,
@@ -137,6 +141,11 @@ learners <- list("mean",
                       alpha = 15,
                       lambda = 150,
                       id = "xgboost3"),
+                list("xgboost",
+                        gamma = 5,
+                        alpha = 50,
+                        lambda = 100,
+                        id = "xgboost4"),
                  list("xgboost",
                       gamma = 5,
                       alpha = 50,
@@ -149,12 +158,13 @@ learners <- list("mean",
                       id = "xgboost5")
 )
 
+
 # function for running lcmmtp
 run_lcmmtp <-  function(data, day = 5, x = 1, y = 1) # x = 0 and y = 0, x = 1 and y = 0, ATE = 1,1 - 0,0, IIE = 1,1 - 1,0, IDE = 1,0 - 0,0
 {
   outcome_nodes <- c(1, 2, 3, 4, day)
   
-  num_folds <- 5L
+  num_folds <- 3L
   
   result <- lcmmtp(
     data = data, 
