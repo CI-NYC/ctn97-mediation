@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --account=msph
 #SBATCH --job-name=m11
-#SBATCH --mem-per-cpu=5G
+#SBATCH --mem-per-cpu=50G
 #SBATCH --time=4-00:00
 #SBATCH --array=5-14
 #SBATCH -N 1                     
