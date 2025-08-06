@@ -53,6 +53,21 @@ dat <- readRDS("data/analysis_data/analysis_data_alt_shift.rds") |>
                         (dose_total_clonidine_5 >= 0.1 | dose_total_clonazepam_and_benzo_5 >= 2) & max_cows_eligible_5 == 1 ~ 2,
                         (dose_total_clonidine_5 > 0 | dose_total_clonazepam_and_benzo_5 > 0) & max_cows_eligible_5 == 1 ~ 1,
                         TRUE ~ 0)  
+  ) |>
+  mutate(max_cows_3 = case_when(PATID == "02207009701600" ~ max_cows_2,
+                                TRUE ~ max_cows_3),
+         max_cows_missing_indicator_3 = case_when(PATID == "02207009701600" ~ max_cows_missing_indicator_2,
+                                                  TRUE ~ max_cows_missing_indicator_3),
+         Group_3 = case_when(PATID == "02207009701600" ~ Group_2,
+                             TRUE ~ Group_3),
+         Y_3 = case_when(PATID == "02207009701600" ~ 1,
+                         TRUE ~ Y_3),
+         Y_2 = case_when(PATID == "02207009701600" ~ 0,
+                         TRUE ~ Y_2),
+         D_3 = case_when(PATID == "02207009701600" ~ 0,
+                         TRUE ~ D_3),
+         D_2 = case_when(PATID == "02207009701600" ~ 0,
+                         TRUE ~ D_2)
   )
 
 dat <- dat |>
