@@ -1,26 +1,19 @@
-# -------------------------------------
-# Script:
-# Author:
-# Purpose:
-# Notes:
-# -------------------------------------
-#devtools::install_github("shodaiinose/lcmmtp@trunc")
-library(lcmmtptrunc) #this is my custom package
+# set or obtain parameters from script
+options(echo=TRUE) # if you want to see commands in output file
+args=commandArgs(TRUE)
+day=Sys.getenv("SLURM_ARRAY_TASK_ID")
+
 library(tidyverse)
-library(data.table)
-library(parallel)
-library(mlr3)
 library(mlr3superlearner)
 library(mlr3extralearners)
 library(xgboost)
 library(earth)
-library(data.table)
+library(lcmmtp)
 
-x <- 1
-y <- 1
-day <- 14
+x <- as.numeric(args[1])
+y <- as.numeric(args[2])
 
-dat <- readRDS("data/analysis_data/analysis_data_alt_shift.rds") |>
+dat <- readRDS(here::here("data/analysis_data/analysis_data_alt_shift.rds")) |>
   as.data.frame() |>
   mutate(dose_total_clonazepam_and_benzo_1 = dose_total_clonazepam_1 + dose_total_benzo_1,
          dose_total_clonazepam_and_benzo_2 = dose_total_clonazepam_2 + dose_total_benzo_2,
@@ -31,43 +24,28 @@ dat <- readRDS("data/analysis_data/analysis_data_alt_shift.rds") |>
   mutate(
     Group_1 = case_when(dose_total_clonidine_1 >= 0.1 & dose_total_clonazepam_and_benzo_1 >= 3 & max_cows_eligible_1 == 1 ~ 3,
                         (dose_total_clonidine_1 >= 0.1 | dose_total_clonazepam_and_benzo_1 >= 2) & max_cows_eligible_1 == 1 ~ 2,
-                        (dose_total_clonidine_1 > 0 | dose_total_clonazepam_and_benzo_1 > 0) & max_cows_eligible_1 == 1 ~ 1,
+                        (dose_total_clonidine_1 >= 0.1 | dose_total_clonazepam_and_benzo_1 > 0) & max_cows_eligible_1 == 1 ~ 1,
                         TRUE ~ 0),
     Group_2 = case_when(is.na(adj_2) ~ as.numeric(NA),
                         dose_total_clonidine_2 >= 0.1 & dose_total_clonazepam_and_benzo_2 >= 3 & max_cows_eligible_2 == 1 ~ 3,
                         (dose_total_clonidine_2 >= 0.1 | dose_total_clonazepam_and_benzo_2 >= 2) & max_cows_eligible_2 == 1 ~ 2,
-                        (dose_total_clonidine_2 > 0  | dose_total_clonazepam_and_benzo_2 > 0) & max_cows_eligible_2 == 1 ~ 1,
+                        (dose_total_clonidine_2 >= 0.1  | dose_total_clonazepam_and_benzo_2 > 0) & max_cows_eligible_2 == 1 ~ 1,
                         TRUE ~ 0),
     Group_3 = case_when(is.na(adj_3) ~ as.numeric(NA),
                         dose_total_clonidine_3 >= 0.1 & dose_total_clonazepam_and_benzo_3 >= 3 & max_cows_eligible_3 == 1 ~ 3,
                         (dose_total_clonidine_3 >= 0.1 | dose_total_clonazepam_and_benzo_3 >= 2) & max_cows_eligible_3 == 1 ~ 2,
-                        (dose_total_clonidine_3 > 0 | dose_total_clonazepam_and_benzo_3 > 0) & max_cows_eligible_3 == 1 ~ 1,
+                        (dose_total_clonidine_3 >= 0.1 | dose_total_clonazepam_and_benzo_3 > 0) & max_cows_eligible_3 == 1 ~ 1,
                         TRUE ~ 0),
     Group_4 = case_when(is.na(adj_4) ~ as.numeric(NA),
                         dose_total_clonidine_4 >= 0.1 & dose_total_clonazepam_and_benzo_4 >= 3 & max_cows_eligible_4 == 1 ~ 3,
                         (dose_total_clonidine_4 >= 0.1 | dose_total_clonazepam_and_benzo_4 >= 2) & max_cows_eligible_4 == 1 ~ 2,
-                        (dose_total_clonidine_4 > 0 | dose_total_clonazepam_and_benzo_4 > 0) & max_cows_eligible_4 == 1 ~ 1,
+                        (dose_total_clonidine_4 >= 0.1 | dose_total_clonazepam_and_benzo_4 > 0) & max_cows_eligible_4 == 1 ~ 1,
                         TRUE ~ 0),
     Group_5 = case_when(is.na(adj_5) ~ as.numeric(NA),
                         dose_total_clonidine_5 >= 0.1 & dose_total_clonazepam_and_benzo_5 >= 3 & max_cows_eligible_5 == 1 ~ 3,
                         (dose_total_clonidine_5 >= 0.1 | dose_total_clonazepam_and_benzo_5 >= 2) & max_cows_eligible_5 == 1 ~ 2,
-                        (dose_total_clonidine_5 > 0 | dose_total_clonazepam_and_benzo_5 > 0) & max_cows_eligible_5 == 1 ~ 1,
+                        (dose_total_clonidine_5>= 0.1 | dose_total_clonazepam_and_benzo_5 > 0) & max_cows_eligible_5 == 1 ~ 1,
                         TRUE ~ 0)  
-  ) |>
-  mutate(max_cows_3 = case_when(PATID == "02207009701600" ~ max_cows_2,
-                                TRUE ~ max_cows_3),
-         max_cows_missing_indicator_3 = case_when(PATID == "02207009701600" ~ max_cows_missing_indicator_2,
-                                                  TRUE ~ max_cows_missing_indicator_3),
-         Group_3 = case_when(PATID == "02207009701600" ~ Group_2,
-                             TRUE ~ Group_3),
-         Y_3 = case_when(PATID == "02207009701600" ~ 1,
-                         TRUE ~ Y_3),
-         Y_2 = case_when(PATID == "02207009701600" ~ 0,
-                         TRUE ~ Y_2),
-         D_3 = case_when(PATID == "02207009701600" ~ 0,
-                         TRUE ~ D_3),
-         D_2 = case_when(PATID == "02207009701600" ~ 0,
-                         TRUE ~ D_2)
   )
 
 dat <- dat |>
@@ -106,10 +84,8 @@ W <- c("days_from_admission_to_consent",
        #"anxiety_missing",
        "bipolar", #missing,
        #"bipolar_missing",
-       "depression", #missing
+       "depression"#, #missing
        #"depression_missing"
-       "D97NPOPI",
-       "D97NPOPI_missing"
 )
 
 M <- c(c("Group_1"),
@@ -133,46 +109,32 @@ L <- list(c("max_cows_1",
             "max_cows_missing_indicator_5") #benzo
 )
 
-learners <- list("mean",
-                 "glm",
+learners <- list("glm", 
                  "earth",
                  list("xgboost",
-                      gamma = 5,
-                      alpha = 20,
-                      lambda = 250,
-                      id = "xgboost1"),
-                 list("xgboost",
-                      gamma = 1,
-                      lambda = 100,
-                      id = "xgboost2"),
-                 list("xgboost",
                       alpha = 50,
-                      lambda = 1000,
-                      id = "xgboost3"),
-                 list("xgboost",
-                      gamma = 5,
-                      alpha = 50,
-                      lambda = 100,
-                      id = "xgboost4"),
-                 list("xgboost",
-                      gamma = 2,
-                      alpha = 50,
-                      lambda = 500,
+                      lambda = 2000,
                       id = "xgboost5"),
                  list("xgboost",
-                      gamma = 10,
-                      alpha = 100,
-                      lambda = 750,
-                      id = "xgboost6")
+                      alpha = 50,
+                      lambda = 2500,
+                      id = "xgboost5")
 )
 
+# use LASSO with no superlearner (cv_glmnet) -- set cv folds 1
+# increase regularization -- only use 1 xgboost no superlearner, add gamma = 1, lambda 100, no alpha
+# also potential trim more 
 
-# function for running lcmmtp
+# function for running lmtp
 run_lcmmtp <-  function(data, day = 5, x = 1, y = 1) # x = 0 and y = 0, x = 1 and y = 0, ATE = 1,1 - 0,0, IIE = 1,1 - 1,0, IDE = 1,0 - 0,0
 {
-  outcome_nodes <- c(1, 2, 3, 4, day)
+  if (day <= 5) {
+    outcome_nodes <- 1:day
+  } else {
+    outcome_nodes <- c(1, 2, 3, 4, day)
+  }
   
-  num_folds <- 3L
+  num_folds <- 5L
   
   result <- lcmmtp(
     data = data, 
@@ -202,10 +164,14 @@ run_lcmmtp <-  function(data, day = 5, x = 1, y = 1) # x = 0 and y = 0, x = 1 an
   result
 }
 
+if (x == 0 && y == 1) {
+      next
+    }
+      
 set.seed(9)
-res <- run_lcmmtp(data = dat,
-                  day = day,
-                  x = x,
-                  y = y)
-
-saveRDS(res, paste0("results_mediation/mediation_", x, "_", y, "_", day, "group_070325_4_groups_lambda_up_3L_more.rds"))
+res <- progressr::with_progress(run_lcmmtp(data = dat,
+                                                 day = day,
+                                                 x = x,
+                                                 y = y))
+      
+saveRDS(res, here::here(paste0("results_061725/mediation_", x, "_", y, "_", day, "group_070325_4_groups_lambda_up_3L.rds")))

@@ -39,6 +39,7 @@ hist(dat$dose_total_clonazepam_and_benzo_1)
 hist(dat$dose_total_clonidine_1)
 
 ggplot(dat, aes(x = dose_total_clonidine_1, y = dose_total_clonazepam_and_benzo_1)) +
+  geom_jitter(width = 0.2, height = 0, alpha = 0.7) +
   geom_pointdensity() +
   scale_color_viridis_c() +
   theme_minimal() +
