@@ -4,6 +4,7 @@
 # Purpose:
 # Notes:
 # -------------------------------------
+#remotes::install_github("shodaiinose/medoutcon@nocrossfit")
 library(tidyverse)
 library(data.table)
 library(parallel)
