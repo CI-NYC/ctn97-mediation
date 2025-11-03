@@ -119,10 +119,16 @@ dat <- readRDS("data/analysis_data/analysis_data_alt_shift.rds") |>
                         (dose_total_clonidine_5 > 0.1 | dose_total_clonazepam_and_benzo_5 >= 2) & max_cows_eligible_5 == 1 ~ 2,
                         (dose_total_clonidine_5 > 0 | dose_total_clonazepam_and_benzo_5 > 0) & max_cows_eligible_5 == 1 ~ 1,
                         TRUE ~ 0)  
-  )
+  ) |>
+  mutate(M1 = case_when(M1_mean < 1 ~ 0,
+                        M1_mean < 2 ~ 1,
+                        M1_mean < 3 ~ 2,
+                        TRUE ~ 3),
+         M2 = case_when(M2_mean <= 0.1 ~ 0,
+                        TRUE ~ 1))
 
 table2 <- dat |>
-  select(PROTSEG, M1_mean, M2_mean, starts_with("Group_"),
+  select(PROTSEG, M1, M2, M1_mean, M2_mean, starts_with("Group_"),
          dose_total_clonidine_1, dose_total_clonidine_2, dose_total_clonidine_3, dose_total_clonidine_4, dose_total_clonidine_5,
          dose_total_clonazepam_and_benzo_1, dose_total_clonazepam_and_benzo_2, dose_total_clonazepam_and_benzo_3, dose_total_clonazepam_and_benzo_4, dose_total_clonazepam_and_benzo_5) |>
   tbl_summary(
