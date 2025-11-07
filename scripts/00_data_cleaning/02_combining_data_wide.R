@@ -52,11 +52,15 @@ dat_long <- readRDS(here::here("data/analysis_data/max_cows_data_alt.rds")) |>
   mutate(patient_shifted = any(end_shift == 1)) |>
   mutate(naltrexone_injection_day = ifelse(patient_shifted == TRUE, naltrexone_injection_day - 1, naltrexone_injection_day),
          end_induction_day = ifelse(patient_shifted == TRUE, end_induction_day - 1, end_induction_day)) |>
-  select(-c(end_shift, patient_shifted)) |>
+  select(-c(end_shift, patient_shifted)) 
+
+dat_long <- dat_long |>
   filter(day_post_consent <= 14, day_post_consent <= end_induction_day) |>
   mutate(max_cows_missing_indicator = ifelse(is.na(max_cows), 1, 0),
          max_cows = ifelse(is.na(max_cows), 0, max_cows), # replacing missing max cows with 0 
          max_cows_ineligible = ifelse(is.na(max_cows_ineligible), 0, max_cows_ineligible)) # replacing missing max cows eligible with 0
+
+dat_long |> select(PATID, PROTSEG, naltrexone_injection_day) |> group_by(PROTSEG) |> summarize(mean_day = mean(naltrexone_injection_day, na.rm = TRUE))
 
 saveRDS(dat_long, "data/analysis_data/dat_long_alt_shift.rds")
 
@@ -118,7 +122,12 @@ dat <- dat |>
          Y_14 = case_when(is.na(naltrexone_injection_day) ~ 0, 
                           Y_13 == 1 ~ 1,
                           naltrexone_injection_day == 14 ~ 1,
-                          TRUE ~ 0))
+                          TRUE ~ 0),
+         Y_30 = case_when(is.na(naltrexone_injection_day) ~ 0, 
+                          Y_14 == 1 ~ 1,
+                          naltrexone_injection_day > 14 & naltrexone_injection_day <= 30 ~ 1,
+                          TRUE ~ 0),
+         )
 
 # making censoring variables
 
@@ -162,6 +171,9 @@ dat <- dat |>
                           TRUE ~ 1),
          C_14 = case_when(C_13 == 0 ~ 0,
                           end_induction_day == 14 & received_naltrexone_injection == 0 ~ 0, 
+                          TRUE ~ 1),
+         C_30 = case_when(C_14 == 0 ~ 0,
+                          end_induction_day > 14 & end_induction_day <= 30 & received_naltrexone_injection == 0 ~ 0, 
                           TRUE ~ 1))  |>
   select(PATID, PROTSEG, received_naltrexone_injection,
          days_from_admission_to_consent,
@@ -288,11 +300,11 @@ dat_demographics <- dat |>
   select(PATID, PROTSEG, received_naltrexone_injection, days_from_admission_to_consent, age:last_col())
 
 dat_time_vary <- dat |>
-  select(PATID, PROTSEG, received_naltrexone_injection, max_cows_1:Y_14)
+  select(PATID, PROTSEG, received_naltrexone_injection, max_cows_1:Y_30)
 
 # once experienced competing risk, all subsequent values should be missing (except cr/outcome which will always be 1/0 - this is manually changed later)
 cols_to_modify <- c("C_1", "C_2", "C_3", "C_4", "C_5", "C_6", "C_7",
-                    "C_8", "C_9", "C_10", "C_11", "C_12", "C_13", "C_14")
+                    "C_8", "C_9", "C_10", "C_11", "C_12", "C_13", "C_14", "C_30")
 for (col in cols_to_modify) {
   cols_after <- which(names(dat_time_vary) == col):ncol(dat_time_vary)
   cols_after <- cols_after[-1]
@@ -305,7 +317,7 @@ for (col in cols_to_modify) {
 
 # once experienced outcome, all subsequent values should be missing (except cr/outcome which will always be 0/1 - this is manually changed later)
 cols_to_modify <- c("Y_1", "Y_2", "Y_3", "Y_4", "Y_5", "Y_6", "Y_7",
-                    "Y_8", "Y_9", "Y_10", "Y_11", "Y_12", "Y_13", "Y_14")
+                    "Y_8", "Y_9", "Y_10", "Y_11", "Y_12", "Y_13", "Y_14", "Y_30")
 for (col in cols_to_modify) {
   cols_after <- which(names(dat) == col):ncol(dat_time_vary)
   cols_after <- cols_after[-1]
@@ -332,7 +344,8 @@ dat <- dat |>
          C_11 = ifelse(is.na(C_11), 0, C_11),
          C_12 = ifelse(is.na(C_12), 0, C_12),
          C_13 = ifelse(is.na(C_13), 0, C_13),
-         C_14 = ifelse(is.na(C_14), 0, C_14)) |>
+         C_14 = ifelse(is.na(C_14), 0, C_14),
+         C_30 = ifelse(is.na(C_30), 0, C_30)) |>
   mutate(max_cows_eligible_1 = case_when(max_cows_ineligible_1 == 1 ~ 0,
                                          max_cows_ineligible_1 == 0 ~ 1,
                                          TRUE ~ as.numeric(NA)),

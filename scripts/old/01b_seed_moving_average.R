@@ -4,7 +4,7 @@ library(ggplot2)
 
 set.seed(123)
 
-learners_txt <- c("mean_glm_lasso1SE_interactions_ridge_crossfit")
+learners_txt <- c("mean_glm_lasso1SE_interactions_crossfit")
 
 learners_vec <- c(learners_txt)
 seeds_vec <- c(1:10)
@@ -16,7 +16,7 @@ all_results <- expand.grid(
   I = folds_vec
 ) |>
   pmap_dfr(function(learners_txt, s, I) {
-    file_path <- paste0("results_medoutcon_101025/res_learners_", learners_txt, "_seed_", s, "_", I, "_benzo_and_clon_M.rds")
+    file_path <- paste0("results_medoutcon_101025/res_learners_", learners_txt, "_seed_", s, "_", I, "_benzo_and_clon_M_sens.rds")
     
     if(file.exists(file_path)){
       res <- readRDS(file_path)   

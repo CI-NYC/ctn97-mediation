@@ -5,6 +5,8 @@
 # Notes:
 # -------------------------------------
 #remotes::install_github("shodaiinose/medoutcon@nocrossfit")
+
+## NOTE: need to add ridge for stability for the sensitivity analysis (see commented code in medoutcon)
 library(tidyverse)
 library(data.table)
 library(parallel)
@@ -33,8 +35,8 @@ dat <- readRDS("data/analysis_data/analysis_data_alt_shift.rds") |>
          M2 = case_when(M2 <= 0.1 ~ 0,
                         TRUE ~ 1))
 
-# total effect should be around 0.42
-dat |> group_by(PROTSEG) |> summarize(initiated = sum(ifelse(Y_14 == 1, 1, 0)), count = n(), perc = initiated/count)
+# total effect should be around 0.27
+dat |> group_by(PROTSEG) |> summarize(initiated = sum(ifelse(Y_30 == 1, 1, 0)), count = n(), perc = initiated/count)
 
 W <- c("days_from_admission_to_consent",
        # demographics
@@ -68,21 +70,21 @@ M <- c("M1",
        "M2")
 
 dat <- dat |>
-  select(W, L, PROTSEG, M, C_14, Y_14)
+  select(W, L, PROTSEG, M, C_30, Y_30)
 
 learners_txt <- "mean_glm_lasso1SE_interactions_crossfit"
 
-for (s in c(1:1)){
-  set.seed(s)
-  
-  for (i in c(1))  
-  {
+s <- 1
+set.seed(s)
+
+i <- 1
+
     tmle_de <- medoutcon(
       W = dat[, c(W, L)],
       A = dat$PROTSEG,
       Z = NULL,
       M = dat[, M],
-      Y = dat$Y_14,
+      Y = dat$Y_30,
       g_learners = Lrnr_mean$new(),
       h_learners = NULL,
       b_learners = NULL,
@@ -99,7 +101,7 @@ for (s in c(1:1)){
       A = dat$PROTSEG,
       Z = NULL,
       M = dat[, M],
-      Y = dat$Y_14,
+      Y = dat$Y_30,
       g_learners = Lrnr_mean$new(),
       h_learners = NULL,
       b_learners = NULL,
@@ -128,12 +130,6 @@ for (s in c(1:1)){
       rbind(summary(tmle_ie)) |>
       rbind(summary(tmle_de))
     
-    if (!dir.exists("results_medoutcon_101025")) {
-      dir.create("results_medoutcon_101025", recursive = TRUE)
-    }
-    
-    saveRDS(tmle_de, paste0("results_medoutcon_101025/tmle_de_learners_", learners_txt, "_seed_", s, "_", i, "_benzo_and_clon_M.rds"))
-    saveRDS(tmle_ie, paste0("results_medoutcon_101025/tmle_ie_learners_", learners_txt, "_seed_", s, "_", i, "_benzo_and_clon_M.rds"))
-    saveRDS(df, paste0("results_medoutcon_101025/res_learners_", learners_txt, "_seed_", s, "_", i, "_benzo_and_clon_M.rds"))
-  }
-}
+saveRDS(tmle_de, paste0("results_medoutcon_101025/tmle_de_learners_", learners_txt, "_seed_", s, "_", i, "_benzo_and_clon_M_sens.rds"))
+saveRDS(tmle_ie, paste0("results_medoutcon_101025/tmle_ie_learners_", learners_txt, "_seed_", s, "_", i, "_benzo_and_clon_M_sens.rds"))
+saveRDS(df, paste0("results_medoutcon_101025/res_learners_", learners_txt, "_seed_", s, "_", i, "_benzo_and_clon_M_sens.rds"))

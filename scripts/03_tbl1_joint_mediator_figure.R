@@ -62,7 +62,7 @@ c("max_cows_5",
 )
 
 table1 <- dat |>
-  select(PROTSEG, W, unlist(L), "C_14", "Y_14") |>
+  select(PROTSEG, W, unlist(L), "C_14", "Y_14", "C_30", "Y_30") |>
   tbl_summary(
     statistic = list(all_continuous() ~ "{median} ({p25}, {p75})",
                      all_categorical() ~ "{n} ({p}%)"),
