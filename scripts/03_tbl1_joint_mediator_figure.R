@@ -3,7 +3,7 @@ library(gtsummary)
 library(ggplot2)
 library(patchwork)
 
-dat <- readRDS(here::here("data/analysis_data/pre_imputed_analysis_data_alt_shift.rds")) |>
+dat <- readRDS(here::here("data/analysis_data/pre_imputed_analysis_data_alt_shift_R1.rds")) |>
   # mutate(max_cows_1 = ifelse(max_cows_missing_indicator_1 == 1, as.numeric(NA), max_cows_1),
   #        max_cows_2 = ifelse(max_cows_missing_indicator_2 == 1, as.numeric(NA), max_cows_2),
   #        max_cows_3 = ifelse(max_cows_missing_indicator_3 == 1, as.numeric(NA), max_cows_3),
@@ -36,7 +36,11 @@ W <- c("days_from_admission_to_consent",
        "anxiety", #missing
        "bipolar", #missing,
        "depression", #missing
-       "D97NPOPI"
+       "D97NPOPI",
+       "TLHERR_indicator", #missing
+       "TLOPIR_indicator", #missing
+       "TLMTDR_indicator", #missing
+       "TLBUPR_indicator" #missing
 )
 
 L <- list(c("max_cows_1", 
