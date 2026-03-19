@@ -11,9 +11,9 @@ primary_results <- readRDS(here::here("results_medoutcon_R1/res_learners_mean_gl
   select(lwr_ci, param_est, upr_ci, mediation_type, effect_type)
 
 # reading secondary results
-mediation_1_1 <- readRDS(here::here("results_mediation_final_secondary_R1/mediation_1_1withglmnetranger_20.rds"))
-mediation_1_0 <- readRDS(here::here("results_mediation_final_secondary_R1/mediation_1_0withglmnetranger_20.rds"))
-mediation_0_0 <- readRDS(here::here("results_mediation_final_secondary_R1/mediation_0_0withglmnetranger_20.rds"))
+mediation_1_1 <- readRDS(here::here("results_mediation_final_secondary_R1/mediation_1_1withglmnetranger_75.rds"))
+mediation_1_0 <- readRDS(here::here("results_mediation_final_secondary_R1/mediation_1_0withglmnetranger_75.rds"))
+mediation_0_0 <- readRDS(here::here("results_mediation_final_secondary_R1/mediation_0_0withglmnetranger_75.rds"))
 
 secondary_results <- data.frame(lwr_ci = numeric(),
                                 param_est = numeric(),

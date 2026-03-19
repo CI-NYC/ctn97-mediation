@@ -114,7 +114,7 @@ learners <- list("mean",
                  "glm",
                  list("cv_glmnet", alpha = 1, s = "lambda.1se"),
                  list("cv_glmnet", alpha = 0, s = "lambda.1se"),
-                 list("ranger", num.trees = 20)
+                 list("ranger", num.trees = 75)
 )
 
 # function for running lcmmtp
@@ -147,7 +147,7 @@ run_lcmmtp <-  function(data, day = 14, x = 0, y = 0) # x = 0 and y = 0, x = 1 a
                               learners_QL = learners,
                               learners_QZ = learners,
                               learners_QM = learners,
-                              trim = 0.975),
+                              trim = 0.999),
     id = NULL)
   
   result
@@ -163,4 +163,4 @@ if (!dir.exists("results_mediation_final_secondary_R1")) {
   dir.create("results_mediation_final_secondary_R1", recursive = TRUE)
 }
 
-saveRDS(res, paste0("results_mediation_final_secondary_R1/mediation_", x, "_", y, "withglmnetranger_20.rds"))
+saveRDS(res, paste0("results_mediation_final_secondary_R1/mediation_", x, "_", y, "withglmnetranger_75.rds"))
