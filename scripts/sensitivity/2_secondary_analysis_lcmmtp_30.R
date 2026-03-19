@@ -19,10 +19,10 @@ library(OrdMonReg)
 library(mlr3pipelines)
 library(mlr3learners)
 
-x <- 0
-y <- 0
+x <- 1
+y <- 1
 
-dat <- readRDS("data/analysis_data/analysis_data_alt_shift.rds") |>
+dat <- readRDS("data/analysis_data/analysis_data_alt_shift_R1.rds") |>
   as.data.frame() |>
   mutate(dose_total_clonazepam_and_benzo_1 = dose_total_clonazepam_1 + dose_total_benzo_1,
          dose_total_clonazepam_and_benzo_2 = dose_total_clonazepam_2 + dose_total_benzo_2,
@@ -60,39 +60,34 @@ W <- c("days_from_admission_to_consent",
        "DESEX",
        "age",
        "is_hispanic",
-       #"is_hispanic_missing",
        "DEWHITE",
        "DEBLACK",
-       #"DEAMEIND",
-       #"DEAAPI",
        "DEOTHER",
-       #"DERACE_missing",
-       #"PROTSEG",
        # substance use
-       "alcohol_use_disorder", #missing
-       #"alcohol_use_disorder_missing",
-       "amphetamine_use_disorder", #missing
-       #"amphetamine_use_disorder_missing",
-       "cannabis_use_disorder", #missing
-       #"cannabis_use_disorder_missing",
-       "cocaine_use_disorder", #missing
-       #"cocaine_use_disorder_missing",
-       "sedative_use_disorder", #missing
-       #"sedative_use_disorder_missing",
+       "alcohol_use_disorder",
+       "amphetamine_use_disorder",
+       "cannabis_use_disorder",
+       "cocaine_use_disorder",
+       "sedative_use_disorder",
        "injection_opioid_use",
        "injection_opioid_use_missing",
        "years_since_first_opioid_use",
        "years_since_first_opioid_use_missing",
        # mental health
-       "anxiety", #missing
-       #"anxiety_missing",
-       "bipolar", #missing,
-       #"bipolar_missing",
-       "depression", #missing
-       #"depression_missing"
+       "anxiety",
+       "bipolar",
+       "depression",
        "D97NPOPI",
-       "D97NPOPI_missing"
-)
+       "D97NPOPI_missing",
+       # New variables
+       "TLHERR_indicator",
+       "TLHERR_indicator_missing",
+       "TLOPIR_indicator",
+       "TLOPIR_indicator_missing",
+       "TLMTDR_indicator",
+       "TLMTDR_indicator_missing",
+       "TLBUPR_indicator",
+       "TLBUPR_indicator_missing")
 
 M <- c(c("Group_1"),
        c("Group_2"),
@@ -119,7 +114,7 @@ learners <- list("mean",
                  "glm",
                  list("cv_glmnet", alpha = 1, s = "lambda.1se"),
                  list("cv_glmnet", alpha = 0, s = "lambda.1se"),
-                 list("ranger", num.trees = 40)
+                 list("ranger", num.trees = 75)
 )
 
 # function for running lcmmtp
@@ -152,7 +147,7 @@ run_lcmmtp <-  function(data, day = 30, x = 0, y = 0) # x = 0 and y = 0, x = 1 a
                               learners_QL = learners,
                               learners_QZ = learners,
                               learners_QM = learners,
-                              trim = 0.975),
+                              trim = 0.999),
     id = NULL)
   
   result
@@ -164,4 +159,8 @@ res <- run_lcmmtp(data = dat,
                   x = x,
                   y = y)
 
-saveRDS(res, paste0("results_mediation_final_secondary/mediation_", x, "_", y, "withglmnetranger_sens.rds"))
+if (!dir.exists("results_mediation_final_secondary_R1")) {
+  dir.create("results_mediation_final_secondary_R1", recursive = TRUE)
+}
+
+saveRDS(res, paste0("results_mediation_final_secondary_R1/mediation_", x, "_", y, "withglmnetranger_sens.rds"))

@@ -16,7 +16,7 @@ library(data.table)
 library(medoutconnocrossfit)
 library(sl3)
 
-dat <- readRDS("data/analysis_data/analysis_data_alt_shift.rds") |>
+dat <- readRDS("data/analysis_data/analysis_data_alt_shift_R1.rds") |>
   as.data.frame() |>
   mutate(across(starts_with("C_"), ~ ifelse(. == 0, 1, ifelse(. == 1, 0, .)))) |>
   mutate(dose_total_clonazepam_and_benzo_1 = dose_total_clonazepam_1 + dose_total_benzo_1,
@@ -61,7 +61,16 @@ W <- c("days_from_admission_to_consent",
        "bipolar",
        "depression",
        "D97NPOPI",
-       "D97NPOPI_missing")
+       "D97NPOPI_missing",
+       # New variables
+       "TLHERR_indicator",
+       "TLHERR_indicator_missing",
+       "TLOPIR_indicator",
+       "TLOPIR_indicator_missing",
+       "TLMTDR_indicator",
+       "TLMTDR_indicator_missing",
+       "TLBUPR_indicator",
+       "TLBUPR_indicator_missing")
 
 L <- c("max_cows_1",
        "max_cows_missing_indicator_1")
@@ -130,6 +139,10 @@ i <- 1
       rbind(summary(tmle_ie)) |>
       rbind(summary(tmle_de))
     
-saveRDS(tmle_de, paste0("results_medoutcon_101025/tmle_de_learners_", learners_txt, "_seed_", s, "_", i, "_benzo_and_clon_M_sens.rds"))
-saveRDS(tmle_ie, paste0("results_medoutcon_101025/tmle_ie_learners_", learners_txt, "_seed_", s, "_", i, "_benzo_and_clon_M_sens.rds"))
-saveRDS(df, paste0("results_medoutcon_101025/res_learners_", learners_txt, "_seed_", s, "_", i, "_benzo_and_clon_M_sens.rds"))
+if (!dir.exists("results_medoutcon_R1")) {
+      dir.create("results_medoutcon_R1", recursive = TRUE)
+    }
+    
+saveRDS(tmle_de, paste0("results_medoutcon_R1/tmle_de_learners_", learners_txt, "_seed_", s, "_", i, "_benzo_and_clon_M_sens.rds"))
+saveRDS(tmle_ie, paste0("results_medoutcon_R1/tmle_ie_learners_", learners_txt, "_seed_", s, "_", i, "_benzo_and_clon_M_sens.rds"))
+saveRDS(df, paste0("results_medoutcon_R1/res_learners_", learners_txt, "_seed_", s, "_", i, "_benzo_and_clon_M_sens.rds"))
