@@ -3,7 +3,7 @@ library(ggplot2)
 library(knitr)
 
 # reading primary results
-primary_results <- readRDS(here::here("results_medoutcon_101025/res_learners_mean_glm_lasso1SE_interactions_crossfit_seed_1_1_benzo_and_clon_M.rds")) |>
+primary_results <- readRDS(here::here("results_medoutcon_R1/res_learners_mean_glm_lasso1SE_interactions_crossfit_seed_1_1_benzo_and_clon_M.rds")) |>
   mutate(effect_type = case_when(param == "total_natural" ~ "Total",
                                  param == "indirect_natural" ~ "Indirect",
                                  param == "direct_natural" ~ "Direct"),
@@ -11,9 +11,9 @@ primary_results <- readRDS(here::here("results_medoutcon_101025/res_learners_mea
   select(lwr_ci, param_est, upr_ci, mediation_type, effect_type)
 
 # reading secondary results
-mediation_1_1<- readRDS(here::here("results_mediation_final_secondary/mediation_1_1withglmnetranger.rds"))
-mediation_1_0<- readRDS(here::here("results_mediation_final_secondary/mediation_1_0withglmnetranger.rds"))
-mediation_0_0 <- readRDS(here::here("results_mediation_final_secondary/mediation_0_0withglmnetranger.rds"))
+mediation_1_1 <- readRDS(here::here("results_mediation_final_secondary_R1/mediation_1_1withglmnetranger_75.rds"))
+mediation_1_0 <- readRDS(here::here("results_mediation_final_secondary_R1/mediation_1_0withglmnetranger_75.rds"))
+mediation_0_0 <- readRDS(here::here("results_mediation_final_secondary_R1/mediation_0_0withglmnetranger_75.rds"))
 
 secondary_results <- data.frame(lwr_ci = numeric(),
                                 param_est = numeric(),
@@ -64,7 +64,12 @@ res_plot <- ggplot(results, aes(x = mediation_type, y = param_est)) +
 
 res_plot
 
-ggsave(filename = "figures/res_plot.pdf",
+if (!dir.exists("figures_R1")) {
+  dir.create("figures_R1", recursive = TRUE)
+}
+
+
+ggsave(filename = "figures_R1/res_plot.pdf",
        width = 9,
        height = 6,
        units = "in",
